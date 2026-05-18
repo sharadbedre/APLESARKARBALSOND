@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>आपले सरकार सेवा केंद्र - टूलकिट</title>
+    <!-- Bootstrap CSS for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- PDF-Lib & PDF.js for PDF manipulation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .header-panel { background: linear-gradient(135deg, #ff9933, #ffffff, #138808); padding: 15px; border-bottom: 3px solid #000080; }
+        .card { border: none; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card-header { background-color: #0d6efd; color: white; font-weight: bold; border-top-left-radius: 10px !important; border-top-right-radius: 10px !important; }
+        .footer-panel { background-color: #212529; color: white; padding: 15px; margin-top: 30px; text-align: center; border-radius: 5px; }
+        .logo-text { font-size: 24px; font-weight: bold; color: #000080; text-shadow: 1px 1px 2px #fff; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid header-panel text-center mb-4">
+    <div class="d-flex justify-content-center align-items-center flex-wrap">
+        <!-- आपले सरकार अधिकृत लोगो इमेज (उदाहरणासाठी प्लेसहोल्डर वापरला आहे, तुम्ही बदलू शकता) -->
+        <img src="https://aaplesarkar.mahaonline.gov.in/Images/logo.png" alt="Aaple Sarkar Logo" style="height: 60px; margin-right: 15px; onerror="this.src='https://via.placeholder.com/60?text=AS';">
+        <div class="logo-text">Aaple Sarkar Seva Kendra | आपले सरकार सेवा केंद्र</div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        
+        <!-- १. शासकीय फोटो रिसायझर (160x200 px, 5-20 KB) -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">१. शासकीय फोटो रिसायझर (160x200 px | 5-20 KB)</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">फोटो निवडा (JPG/PNG):</label>
+                        <input type="file" id="govPhotoInput" class="form-control" accept="image/*">
+                    </div>
+                    <button onclick="processGovPhoto()" class="btn btn-success w-100">रिसाईज आणि डाउनलोड करा</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- २. JPG कॉम्प्रेसर (300KB, 200KB, 75-100KB आणि मॅन्युअल) -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">२. JPG इमेज कॉम्प्रेसर</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">इमेज निवडा:</label>
+                        <input type="file" id="jpgCompressInput" class="form-control" accept="image/jpeg, image/png">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">आकार निवडा किंवा मॅन्युअली टाका (KB):</label>
+                        <select id="jpgTargetSize" class="form-select mb-2" onchange="toggleManualInput('jpg')">
+                            <option value="300">Under 300 KB</option>
+                            <option value="200">Under 200 KB</option>
+                            <option value="85">75 KB to 100 KB (Target 85KB)</option>
+                            <option value="manual">मॅन्युअली आकार टाका (Custom)</option>
+                        </select>
+                        <input type="number" id="jpgManualSize" class="form-control d-none" placeholder="उदा. 150">
+                    </div>
+                    <button onclick="compressJPG()" class="btn btn-primary w-100">इमेज कॉम्प्रेस करा</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ३. PDF कॉम्प्रेसर (Under 300KB, 200KB आणि मॅन्युअल) -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">३. PDF फाईल कॉम्प्रेसर</div>
+                <div class="card-body">
+                    <p class="text-muted small">*टीप: हा कॉम्प्रेसर इमेज आधारित किंवा स्कॅन केलेल्या PDF वर सर्वोत्तम काम करतो.</p>
+                    <div class="mb-3">
+                        <label class="form-label">PDF फाईल निवडा:</label>
+                        <input type="file" id="pdfCompressInput" class="form-control" accept="application/pdf">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">आकार निवडा किंवा मॅन्युअली टाका (KB):</label>
+                        <select id="pdfTargetSize" class="form-select mb-2" onchange="toggleManualInput('pdf')">
+                            <option value="300">Under 300 KB</option>
+                            <option value="200">Under 200 KB</option>
+                            <option value="manual">मॅन्युअली आकार टाका (Custom)</option>
+                        </select>
+                        <input type="number" id="pdfManualSize" class="form-control d-none" placeholder="उदा. 250">
+                    </div>
+                    <button onclick="compressPDF()" class="btn btn-warning w-100">PDF कॉम्प्रेस करा</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ४. कन्व्हर्टर आणि मर्ज टूल्स (JPG to PDF, PDF to JPG, Merge JPG) -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">४. कन्व्हर्टर आणि मर्ज टूल्स</div>
+                <div class="card-body">
+                    <div class="mb-3 p-2 border rounded bg-light">
+                        <h6>JPG टू PDF / सर्व JPG एकत्र करा (Merge)</h6>
+                        <input type="file" id="jpgToPdfInput" class="form-control mb-2" accept="image/jpeg, image/png" multiple>
+                        <button onclick="convertJpgToPdf()" class="btn btn-info btn-sm w-100 text-white">PDF बनवा / Merge करा</button>
+                    </div>
+                    <div class="p-2 border rounded bg-light">
+                        <h6>PDF टू JPG कनवर्टर</h6>
+                        <input type="file" id="pdfToJpgInput" class="form-control mb-2" accept="application/pdf">
+                        <button onclick="convertPdfToJpg()" class="btn btn-info btn-sm w-100 text-white">JPG मध्ये रूपांतरित करा</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- फुटर आणि संपर्क माहिती -->
+<div class="container">
+    <div class="footer-panel">
+        <h4>Aaple Sarkar Seva Kendra Balsond | आपले सरकार सेवा केंद्र बळसोंड</h4>
+        <p class="mb-0 mt-2">Any Help Contact: <strong>SHARAD BEDRE</strong> | Mob No. <strong>9850722136</strong></p>
+    </div>
+</div>
+
+<script>
+// मॅन्युअल केबी इनपुट बॉक्स दाखवण्यासाठी/लपवण्यासाठी फंक्शन
+function toggleManualInput(type) {
+    const select = document.getElementById(type + 'TargetSize').value;
+    const manualInput = document.getElementById(type + 'ManualSize');
+    if(select === 'manual') {
+        manualInput.classList.remove('d-none');
+    } else {
+        manualInput.classList.add('d-none');
+    }
+}
+
+// १. शासकीय फोटो रिसायझर (160x200 px, 5-20 KB)
+function processGovPhoto() {
+    const fileInput = document.getElementById('govPhotoInput');
+    if (!fileInput.files[0]) return alert('कृपया फोटो निवडा!');
+    
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function(event) {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 160;
+            canvas.height = 200;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, 160, 200);
+            
+            // ५ ते २० केबी दरम्यान आणण्यासाठी क्वालिटी लूप
+            let quality = 0.9;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+            let sizeKb = Math.round((dataUrl.split(',')[1].length * 3) / 4) / 1024;
+            
+            while (sizeKb > 20 && quality > 0.1) {
+                quality -= 0.05;
+                dataUrl = canvas.toDataURL('image/jpeg', quality);
+                sizeKb = Math.round((dataUrl.split(',')[1].length * 3) / 4) / 1024;
+            }
+            
+            if(sizeKb < 5) {
+                // आकार खूपच लहान झाल्यास थोडी क्वालिटी वाढवणे किंवा पॅडिंग देणे
+                quality = 0.95;
+                dataUrl = canvas.toDataURL('image/jpeg', quality);
+            }
+
+            triggerDownload(dataUrl, "Gov_Photo_160x200.jpg");
+        };
+    };
+}
+
+// २. JPG कॉम्प्रेसर लॉजिक
+function compressJPG() {
+    const fileInput = document.getElementById('jpgCompressInput');
+    if (!fileInput.files[0]) return alert('कृपया इमेज निवडा!');
+    
+    let targetSelect = document.getElementById('jpgTargetSize').value;
+    let targetSize = targetSelect === 'manual' ? parseFloat(document.getElementById('jpgManualSize').value) : parseFloat(targetSelect);
+    if (!targetSize) return alert('कृपया अचूक आकार (KB) टाका!');
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function(event) {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // ओरिजिनल रेशो टिकवून ठेवणे
+            let width = img.width;
+            let height = img.height;
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            let quality = 0.9;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+            let sizeKb = (dataUrl.split(',')[1].length * 3 / 4) / 1024;
+
+            // फाईल साईज कमी करण्यासाठी रिझोल्यूशन आणि क्वालिटी लूप
+            while (sizeKb > targetSize && quality > 0.1) {
+                quality -= 0.05;
+                dataUrl = canvas.toDataURL('image/jpeg', quality);
+                sizeKb = (dataUrl.split(',')[1].length * 3 / 4) / 1024;
+            }
+
+            if (sizeKb > targetSize) {
+                // जर फक्त क्वालिटी कमी करून आकार कमी झाला नाही तर डायमेंशन कमी करणे
+                canvas.width = width * 0.7;
+                canvas.height = height * 0.7;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            }
+
+            triggerDownload(dataUrl, "Compressed_Image.jpg");
+        };
+    };
+}
+
+// ३. PDF कॉम्प्रेसर लॉजिक (Client-side Rendering/Re-compress)
+async function compressPDF() {
+    const fileInput = document.getElementById('pdfCompressInput');
+    if (!fileInput.files[0]) return alert('कृपया PDF फाईल निवडा!');
+
+    let targetSelect = document.getElementById('pdfTargetSize').value;
+    let targetSize = targetSelect === 'manual' ? parseFloat(document.getElementById('pdfManualSize').value) : parseFloat(targetSelect);
+    if (!targetSize) return alert('कृपया अचूक आकार (KB) टाका!');
+
+    alert('PDF प्रोसेस होत आहे, कृपया काही सेकंद थांबा...');
+    
+    const file = fileInput.files[0];
+    const arrayBuffer = await file.arrayBuffer();
+    
+    // PDFJS लायब्ररी वापरून पेजेस रीड करणे
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    const pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+    const outPdfDoc = await PDFLib.PDFDocument.create();
+
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+        const page = await pdfDoc.getPage(i);
+        const viewport = page.getViewport({scale: 1.5}); // रिझोल्युशन बॅलन्स राखणे
+        
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({canvasContext: ctx, viewport: viewport}).promise;
+        
+        // टार्गेट साईजनुसार क्वालिटी ठरवणे
+        let imgQuality = targetSize < 200 ? 0.5 : 0.7;
+        const imgDataUrl = canvas.toDataURL('image/jpeg', imgQuality);
+        const jpgImage = await outPdfDoc.embedJpg(imgDataUrl);
+        
+        const newPage = outPdfDoc.addPage([viewport.width, viewport.height]);
+        newPage.drawImage(jpgImage, { x: 0, y: 0, width: viewport.width, height: viewport.height });
+    }
+
+    const pdfBytes = await outPdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = "Compressed_Document.pdf";
+    link.click();
+}
+
+// ४. ऑल JPG मर्ज आणि सिंगल JPG टू PDF कन्व्हर्टर
+async function convertJpgToPdf() {
+    const fileInput = document.getElementById('jpgToPdfInput');
+    if (fileInput.files.length === 0) return alert('कृपया एक किंवा अधिक इमेज निवडा!');
+
+    const pdfDoc = await PDFLib.PDFDocument.create();
+
+    for (let i = 0; i < fileInput.files.length; i++) {
+        const file = fileInput.files[i];
+        const arrayBuffer = await file.arrayBuffer();
+        let image;
+        if (file.type === "image/jpeg" || file.type === "image/jpg") {
+            image = await pdfDoc.embedJpg(arrayBuffer);
+        } else if (file.type === "image/png") {
+            image = await pdfDoc.embedPng(arrayBuffer);
+        } else {
+            continue;
+        }
+
+        const page = pdfDoc.addPage([image.width, image.height]);
+        page.drawImage(image, { x: 0, y: 0, width: image.width, height: image.height });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = "Merged_Document.pdf";
+    link.click();
+}
+
+// ५. PDF टू JPG कनवर्टर
+async function convertPdfToJpg() {
+    const fileInput = document.getElementById('pdfToJpgInput');
+    if (!fileInput.files[0]) return alert('कृपया PDF फाईल निवडा!');
+
+    const file = fileInput.files[0];
+    const arrayBuffer = await file.arrayBuffer();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    const pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+
+    alert('एकूण ' + pdfDoc.numPages + ' पेजेस कन्व्हर्ट होत आहेत.');
+
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+        const page = await pdfDoc.getPage(i);
+        const viewport = page.getViewport({scale: 2.0});
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({canvasContext: ctx, viewport: viewport}).promise;
+        const imgDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        triggerDownload(imgDataUrl, `PDF_Page_${i}.jpg`);
+    }
+}
+
+// डाउनलोड ट्रिगर फंक्शन
+function triggerDownload(dataUrl, filename) {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+</script>
+
+</body>
+</html>
